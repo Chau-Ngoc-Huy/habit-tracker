@@ -1,0 +1,70 @@
+/* Import Tailwind */
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* Custom styles */
+body {
+  font-family: 'Quicksand', sans-serif;
+  background-color: #f0f4f8;
+}
+
+.login-bg {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+}
+
+.task-complete {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+.calendar-day {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.calendar-day:hover {
+  background-color: #e0e7ff;
+}
+
+.calendar-day.active {
+  background-color: #6366f1;
+  color: white;
+}
+
+.calendar-day.has-tasks {
+  border: 2px solid #6366f1;
+}
+
+.calendar-day.completed {
+  background-color: #10b981;
+  color: white;
+}
+
+.progress-ring {
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+}
+
+.streak-flame {
+  filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.5));
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.streak-pulse {
+  animation: pulse 2s infinite;
+} 
