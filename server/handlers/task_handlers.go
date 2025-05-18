@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -274,6 +275,7 @@ func GetUserStreak(c *gin.Context) {
 	for {
 		dateStr := currentDate.Format(time.RFC3339)[:10] // Get YYYY-MM-DD format
 		dateInfo := dateTasks[dateStr]
+		fmt.Printf("Checking date: %s, total: %d, completed: %d, frozen: %v\n", dateStr, dateInfo.total, dateInfo.completed, dateInfo.frozen)
 		// If the date has no tasks or is not frozen and not all tasks are completed, break the streak
 		if dateInfo.total == 0 || (!dateInfo.frozen && dateInfo.completed < dateInfo.total && currentDate != time.Now()) {
 			break
