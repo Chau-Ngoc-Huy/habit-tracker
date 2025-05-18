@@ -11,6 +11,7 @@ interface TaskSectionProps {
   onToggleTask: (taskId: number | string, dateString: string) => void;
   onDeleteTask: (taskId: number | string, dateString: string) => void;
   onAddTask: () => void;
+  onEditTask: (taskId: number | string, dateString: string) => void;
 }
 
 const TaskSection: React.FC<TaskSectionProps> = ({
@@ -20,7 +21,8 @@ const TaskSection: React.FC<TaskSectionProps> = ({
   tasks,
   onToggleTask,
   onDeleteTask,
-  onAddTask
+  onAddTask,
+  onEditTask
 }) => {
   const [filter, setFilter] = useState<FilterType>('all');
   
@@ -41,7 +43,7 @@ const TaskSection: React.FC<TaskSectionProps> = ({
   ];
 
   return (
-    <div className="col-span-2">
+    <div>
       <div className="bg-white rounded-xl shadow-sm p-6">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
@@ -93,6 +95,7 @@ const TaskSection: React.FC<TaskSectionProps> = ({
           onToggleTask={onToggleTask}
           onDeleteTask={onDeleteTask}
           onAddTask={onAddTask}
+          onEditTask={onEditTask}
         />
       </div>
     </div>

@@ -1,23 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { formatDate } from '../utils/dateUtils';
+import { Task } from '../types';
 
 interface AddTaskModalProps {
   selectedDate: Date;
   onClose: () => void;
-  onSave: (name: string, date: string) => void;
+  onAdd: (name: string, date: string) => void;
+  initialTask?: Task | null;
 }
 
 const AddTaskModal: React.FC<AddTaskModalProps> = ({
   selectedDate,
   onClose,
-  onSave
+  onAdd,
+  initialTask
 }) => {
   const [taskName, setTaskName] = useState('');
   const [taskDate, setTaskDate] = useState(formatDate(selectedDate));
 
+  useEffect(() => {
+    if (initialTask) {
+      setTaskName(initialTask.name);
+      setTaskDate(initialTask.date || formatDate(selectedDate));
+    }
+  }, [initialTask, selectedDate]);
+
   const handleSave = () => {
     if (taskName.trim() && taskDate) {
-      onSave(taskName.trim(), taskDate);
+      onAdd(taskName.trim(), taskDate);
       onClose();
     } else {
       alert('Vui lòng nhập tên KPI và chọn ngày!');
@@ -28,7 +38,9 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
         <div className="flex justify-between items-center mb-6">
-          <h3 className="text-xl font-bold text-gray-800">Thêm KPI mới</h3>
+          <h3 className="text-xl font-bold text-gray-800">
+            {initialTask ? 'Chỉnh sửa KPI' : 'Thêm KPI mới'}
+          </h3>
           <button 
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700"
@@ -68,7 +80,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
             onClick={handleSave}
             className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-lg transition duration-300"
           >
-            Lưu KPI
+            {initialTask ? 'Cập nhật KPI' : 'Lưu KPI'}
           </button>
         </div>
       </div>

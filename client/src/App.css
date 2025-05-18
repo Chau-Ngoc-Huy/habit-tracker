@@ -34,12 +34,18 @@ body {
 }
 
 .calendar-day.active {
-  background-color: #6366f1;
-  color: white;
+  /* background-color: #6366f1;
+  color: white; */
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
 }
 
 .calendar-day.today {
   font-weight: bold;
+  background: radial-gradient(circle at center, #facc15, #f59e0b);
+  color: #1f2937;
+  box-shadow: 0 0 10px 4px rgba(251, 191, 36, 0.6);
+  border: 2px solid #f59e0b;
 }
 
 .calendar-day.has-tasks {
@@ -47,8 +53,39 @@ body {
 }
 
 .calendar-day.completed {
-  background-color: #10b981;
+  background: linear-gradient(to right, #f97316, #ef4444);
   color: white;
+  border: 2px solid #dc2626;
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
+  position: relative;
+}
+
+.calendar-day.completed::before {
+  content: '🔥';
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.2rem;
+  filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.5));
+}
+
+.calendar-day.frozen {
+  background: linear-gradient(to right, #3b82f6, #60a5fa);
+  color: white;
+  border: 2px solid #2563eb;
+  box-shadow: 0 0 6px rgba(59, 130, 246, 0.6);
+  position: relative;
+}
+
+.calendar-day.frozen::before {
+  content: '❄️';
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.2rem;
+  filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.5));
 }
 
 .progress-ring {

@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"net/http"
+	"strings"
 	"time"
 
 	"habit-tracker/server/db"
@@ -228,10 +229,13 @@ func GetUserStreak(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	// Get all completed tasks for the user
+	// Get all tasks for the user (both completed and frozen)
 	filter := bson.M{
-		"user_id":   objectID,
-		"completed": true,
+		"user_id": objectID,
+		"$or": []bson.M{
+			{"completed": true},
+			{"name": bson.M{"$regex": "frozen", "$options": "i"}},
+		},
 	}
 
 	cursor, err := db.TaskColl.Find(ctx, filter)
@@ -247,25 +251,37 @@ func GetUserStreak(c *gin.Context) {
 		return
 	}
 
-	// Create a map to track completed dates
+	// Create maps to track completed and frozen dates
 	completedDates := make(map[string]bool)
+	frozenDates := make(map[string]bool)
+
 	for _, task := range tasks {
-		completedDates[task.Date] = true
+		dateStr := task.Date[:10] // Get YYYY-MM-DD format
+		if strings.Contains(strings.ToLower(task.Name), "frozen") {
+			frozenDates[dateStr] = true
+		} else if task.Completed {
+			completedDates[dateStr] = true
+		}
 	}
 
 	// Calculate streak
 	streak := 0
-	currentDate := time.Now().AddDate(0, 0, -1) // Start from yesterday
+	currentDate := time.Now() // Start from yesterday
 
 	// Check consecutive days backwards from yesterday
 	for {
 		dateStr := currentDate.Format(time.RFC3339)[:10] // Get YYYY-MM-DD format
 
-		if !completedDates[dateStr] {
+		// If the date has neither completed nor frozen tasks, break the streak
+		if !completedDates[dateStr] && !frozenDates[dateStr] && currentDate != time.Now() {
 			break
 		}
 
-		streak++
+		// Only increment streak for completed dates (not frozen)
+		if completedDates[dateStr] {
+			streak++
+		}
+
 		currentDate = currentDate.AddDate(0, 0, -1)
 	}
 

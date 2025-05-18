@@ -18,6 +18,12 @@ const Calendar: React.FC<CalendarProps> = ({ user, tasks, selectedDate, setSelec
     return tasks?.some(task => task.date === dateString) || false;
   };
 
+  // Check if a date has frozen tasks
+  const hasFrozenTasks = (date: Date): boolean => {
+    const dateString = formatDate(date);
+    return tasks?.some(task => task.date === dateString && task.name.toLowerCase().includes('frozen')) || false;
+  };
+
   // Check if all tasks for a date are completed
   const hasCompletedTasks = (date: Date): boolean => {
     const dateString = formatDate(date);
@@ -71,6 +77,11 @@ const Calendar: React.FC<CalendarProps> = ({ user, tasks, selectedDate, setSelec
       // Check if all tasks are completed
       if (hasCompletedTasks(date)) {
         classes += ' completed';
+      }
+
+      // Check if date has frozen tasks
+      if (hasFrozenTasks(date)) {
+        classes += ' frozen';
       }
     }
     
@@ -133,15 +144,15 @@ const Calendar: React.FC<CalendarProps> = ({ user, tasks, selectedDate, setSelec
           </button>
         </div>
         <div className="grid grid-cols-7 gap-1 text-center mb-2">
-          <div className="text-xs font-medium text-gray-500">CN</div>
-          <div className="text-xs font-medium text-gray-500">T2</div>
-          <div className="text-xs font-medium text-gray-500">T3</div>
-          <div className="text-xs font-medium text-gray-500">T4</div>
-          <div className="text-xs font-medium text-gray-500">T5</div>
-          <div className="text-xs font-medium text-gray-500">T6</div>
-          <div className="text-xs font-medium text-gray-500">T7</div>
+          <div className="text-xs font-medium text-gray-500 calendar-day">CN</div>
+          <div className="text-xs font-medium text-gray-500 calendar-day">T2</div>
+          <div className="text-xs font-medium text-gray-500 calendar-day">T3</div>
+          <div className="text-xs font-medium text-gray-500 calendar-day">T4</div>
+          <div className="text-xs font-medium text-gray-500 calendar-day">T5</div>
+          <div className="text-xs font-medium text-gray-500 calendar-day">T6</div>
+          <div className="text-xs font-medium text-gray-500 calendar-day">T7</div>
         </div>
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7 gap-1 text-center mb-2">
           {days.map((date, index) => (
             <div
               key={index}

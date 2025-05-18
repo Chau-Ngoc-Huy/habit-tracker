@@ -5,6 +5,8 @@ import StatsSection from './StatsSection';
 import AddTaskModal from './AddTaskModal';
 import { User, Task } from '../types';
 import { formatDate } from '../utils/dateUtils';
+import ProgressCard from './ProgressCard';
+import Calendar from './Calendar';
 import { createTask, updateTask, deleteTask, getTasksByUserId, updateUser, getUserStreak } from '../lib/apiClient';
 
 interface DashboardProps {
@@ -25,6 +27,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showAddModal, setShowAddModal] = useState(false);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
 
   const user = currentUser ? users[currentUser] : null;
 
@@ -194,23 +197,48 @@ const Dashboard: React.FC<DashboardProps> = ({
     }
   };
 
+  const handleEditTask = async (taskId: number | string, dateString: string) => {
+    if (!currentUser) return;
+
+    const taskToEdit = tasks.find(task => task.id === taskId);
+    if (taskToEdit) {
+      setEditingTask(taskToEdit);
+      setShowAddModal(true);
+    }
+  };
+
   const addTask = async (name: string, date: string) => {
     if (!currentUser) return;
 
     try {
-      const newTask = await createTask({
-        name,
-        completed: false,
-        user_id: currentUser,
-        date
-      });
+      if (editingTask) {
+        // Update existing task
+        const updatedTask = await updateTask(editingTask.id, {
+          name,
+          completed: editingTask.completed,
+          date
+        });
+        
+        setTasks(prevTasks => 
+          prevTasks.map(task => task.id === editingTask.id ? updatedTask : task)
+        );
+        setEditingTask(null);
+      } else {
+        // Create new task
+        const newTask = await createTask({
+          name,
+          completed: false,
+          user_id: currentUser,
+          date
+        });
+        
+        setTasks(prevTasks => [...(prevTasks || []), newTask]);
+      }
       
-      setTasks(prevTasks => [...(prevTasks || []), newTask]);
-      
-      // Fetch updated streak after adding task
+      // Fetch updated streak after task modification
       await fetchTasksAndStreak();
     } catch (error) {
-      console.error('Error adding task:', error);
+      console.error('Error modifying task:', error);
     }
   };
 
@@ -267,34 +295,50 @@ const Dashboard: React.FC<DashboardProps> = ({
         users={users} 
         onLogout={onLogout} 
         onUserSelect={onUserSelect} 
+        onUpdateUser={handleUpdateUser}
       />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <TaskSection 
-            selectedDate={selectedDate}
-            setSelectedDate={setSelectedDate}
-            user={user}
-            tasks={(tasks || []).filter(task => task.date === formatDate(selectedDate))}
-            onToggleTask={toggleTask}
-            onDeleteTask={handleDeleteTask}
-            onAddTask={() => setShowAddModal(true)}
-          />
-          
-          <StatsSection 
-            user={user}
-            tasks={tasks || []}
-            selectedDate={selectedDate}
-            setSelectedDate={setSelectedDate}
-          />
+          <div className="col-span-2">
+            <TaskSection 
+              selectedDate={selectedDate}
+              setSelectedDate={setSelectedDate}
+              user={user}
+              tasks={(tasks || []).filter(task => task.date === formatDate(selectedDate))}
+              onToggleTask={toggleTask}
+              onDeleteTask={handleDeleteTask}
+              onAddTask={() => setShowAddModal(true)}
+              onEditTask={handleEditTask}
+            />
+            <StatsSection 
+              user={user}
+              tasks={tasks || []}
+              selectedDate={selectedDate}
+              setSelectedDate={setSelectedDate}
+            />
+          </div>
+
+          <div className="space-y-8">
+            <Calendar
+              user={user}
+              tasks={tasks}
+              selectedDate={selectedDate}
+              setSelectedDate={setSelectedDate}
+            />
+          </div>
         </div>
       </main>
       
       {showAddModal && (
         <AddTaskModal
+          onClose={() => {
+            setShowAddModal(false);
+            setEditingTask(null);
+          }}
+          onAdd={addTask}
           selectedDate={selectedDate}
-          onClose={() => setShowAddModal(false)}
-          onSave={addTask}
+          initialTask={editingTask}
         />
       )}
     </div>

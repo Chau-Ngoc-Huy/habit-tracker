@@ -18,15 +18,9 @@ const StatsSection: React.FC<StatsSectionProps> = ({
   setSelectedDate
 }) => {
   return (
-    <div className="space-y-8">
-      <StreakCard user={user} />
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
       <ProgressCard user={user} tasks={tasks} selectedDate={selectedDate} />
-      <Calendar
-        user={user}
-        tasks={tasks}
-        selectedDate={selectedDate}
-        setSelectedDate={setSelectedDate}
-      />
+      <StreakCard user={user} />
     </div>
   );
 };
