@@ -1,11 +1,9 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/next"
-    }
-  ],
+  "framework": "nextjs",
+  "buildCommand": "cd client && npm install && npm run build",
+  "outputDirectory": "client/.next",
+  "installCommand": "cd client && npm install",
   "env": {
     "NEXT_PUBLIC_API_URL": "https://habit-tracker-api.onrender.com"
   }
