@@ -68,7 +68,7 @@ const AppContent: React.FC = () => {
   return (
     <div className="min-h-screen">
       {!currentUser ? (
-        <LoginPage users={users} onLogin={setCurrentUser} />
+        <LoginPage users={users} onUserSelect={setCurrentUser} />
       ) : (
         <Dashboard 
           currentUser={currentUser}

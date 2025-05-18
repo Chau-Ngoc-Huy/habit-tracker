@@ -4,232 +4,159 @@ import { useAuth, AuthContextType } from '../contexts/AuthContext';
 
 interface LoginPageProps {
   users: Record<string, User>;
-  onLogin: (username: string) => void;
+  onUserSelect: (userId: string) => void;
+  auth?: AuthContextType;
 }
 
-// Separate wrapper component to handle auth context gracefully
-const LoginPageWithAuth: React.FC<LoginPageProps> = (props) => {
-  // Always call useAuth unconditionally at the top level
-  const auth = useAuth();
-  
-  return <LoginPageContent {...props} auth={auth} />;
-};
-
-// Inner component that doesn't call hooks conditionally
-interface LoginPageContentProps extends LoginPageProps {
-  auth: AuthContextType;
-}
-
-const LoginPageContent: React.FC<LoginPageContentProps> = ({ users, onLogin, auth }) => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+function LoginPageContent({ users, onUserSelect, auth }: LoginPageProps) {
   const [email, setEmail] = useState('');
-  const [isRegistering, setIsRegistering] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [error, setError] = useState('');
 
-  // Helper function to migrate existing users to Supabase
-  const tryRegisterExistingUser = async () => {
-    try {
-      // First try to register the user with Supabase
-      await auth.signUp(email || `${username}@example.com`, password, username);
-      return true;
-    } catch (error) {
-      console.error('Error auto-registering user:', error);
-      return false;
-    }
-  };
-
-  const handleLogin = async () => {
-    if (!username || !password) {
-      setError('Vui lòng nhập tên đăng nhập và mật khẩu!');
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
 
     try {
-      try {
-        // Try to sign in with Supabase
-        await auth.signIn(email || `${username}@example.com`, password);
-        onLogin(username);
-      } catch (loginError) {
-        // If login fails and we have a valid email, try to register the user
-        if (email && users[username]) {
-          const registered = await tryRegisterExistingUser();
-          if (registered) {
-            // If registration was successful, try login again
-            await auth.signIn(email, password);
-            onLogin(username);
-          } else {
-            throw loginError;
-          }
-        } else {
-          // Fallback to the demo mode
-          if (users[username]) {
-            onLogin(username);
-          } else {
-            setError('Tên đăng nhập không tồn tại!');
-          }
-        }
+      if (isSignUp) {
+        await auth?.signUp(email, password, name);
+      } else {
+        await auth?.signIn(email, password);
       }
-    } catch (error) {
-      setError('Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin!');
-      console.error(error);
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
     }
-  };
-
-  const handleRegister = async () => {
-    if (!username || !password || !email) {
-      setError('Vui lòng nhập đầy đủ thông tin!');
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      await auth.signUp(email, password, username);
-      // Switch back to login view after successful registration
-      setIsRegistering(false);
-      setError(null);
-    } catch (error) {
-      setError('Đăng ký thất bại. Vui lòng thử lại!');
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const toggleView = () => {
-    setIsRegistering(!isRegistering);
-    setError(null);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center login-bg p-4">
-      <div className="bg-white rounded-xl shadow-xl p-8 w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">Habit Tracker</h1>
-          <p className="text-gray-500 mt-2">Theo dõi thói quen hàng ngày của bạn</p>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            {isSignUp ? 'Create your account' : 'Sign in to your account'}
+          </h2>
         </div>
-        
-        <div className="mb-6 text-center">
-          <div className="bg-indigo-100 text-indigo-700 py-2 px-4 rounded-lg inline-block mb-4">
-            {isRegistering ? 'Đăng ký tài khoản mới' : 'Đăng nhập để tiếp tục'}
-          </div>
-        </div>
-        
-        <div className="space-y-4">
-          {isRegistering && (
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <div className="rounded-md shadow-sm -space-y-px">
+            {isSignUp && (
+              <div>
+                <label htmlFor="name" className="sr-only">
+                  Name
+                </label>
+                <input
+                  id="name"
+                  name="name"
+                  type="text"
+                  required
+                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                  placeholder="Name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </div>
+            )}
             <div>
-              <label className="block text-gray-700 mb-2" htmlFor="email">Email</label>
-              <input 
-                id="email" 
-                type="email" 
+              <label htmlFor="email-address" className="sr-only">
+                Email address
+              </label>
+              <input
+                id="email-address"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                placeholder="Email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500" 
-                placeholder="Nhập địa chỉ email"
               />
             </div>
-          )}
-          
-          <div>
-            <label className="block text-gray-700 mb-2" htmlFor="username">Tên đăng nhập</label>
-            <input 
-              id="username" 
-              type="text" 
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500" 
-              placeholder="Nhập tên đăng nhập"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-gray-700 mb-2" htmlFor="password">Mật khẩu</label>
-            <input 
-              id="password" 
-              type="password" 
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500" 
-              placeholder="Nhập mật khẩu"
-            />
-          </div>
-          
-          {!isRegistering && (
             <div>
-              <label className="block text-gray-700 mb-2" htmlFor="loginEmail">Email (nếu đã đăng ký)</label>
-              <input 
-                id="loginEmail" 
-                type="email" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500" 
-                placeholder="Nhập email (tùy chọn)"
+              <label htmlFor="password" className="sr-only">
+                Password
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
               />
             </div>
-          )}
-          
+          </div>
+
           {error && (
-            <div className="bg-red-50 text-red-500 p-3 rounded-lg text-sm">
-              {error}
-            </div>
+            <div className="text-red-500 text-sm text-center">{error}</div>
           )}
-          
-          <button 
-            onClick={isRegistering ? handleRegister : handleLogin}
-            disabled={loading}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-lg transition duration-300"
+
+          <div>
+            <button
+              type="submit"
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              {isSignUp ? 'Sign up' : 'Sign in'}
+            </button>
+          </div>
+        </form>
+
+        <div className="text-center">
+          <button
+            type="button"
+            className="text-indigo-600 hover:text-indigo-500"
+            onClick={() => setIsSignUp(!isSignUp)}
           >
-            {loading 
-              ? 'Đang xử lý...' 
-              : isRegistering 
-                ? 'Đăng ký' 
-                : 'Đăng nhập'
-            }
+            {isSignUp
+              ? 'Already have an account? Sign in'
+              : "Don't have an account? Sign up"}
           </button>
         </div>
-        
-        <div className="mt-6 flex justify-between text-sm">
-          <button className="text-indigo-600 hover:underline">
-            {isRegistering ? '' : 'Quên mật khẩu?'}
-          </button>
-          <button 
-            onClick={toggleView} 
-            className="text-indigo-600 hover:underline"
-          >
-            {isRegistering ? 'Đã có tài khoản? Đăng nhập' : 'Đăng ký tài khoản mới'}
-          </button>
+
+        <div className="mt-6">
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-gray-50 text-gray-500">
+                Or continue with
+              </span>
+            </div>
+          </div>
+
+          <div className="mt-6 grid grid-cols-1 gap-3">
+            {Object.entries(users).map(([id, user]) => (
+              <button
+                key={id}
+                onClick={() => onUserSelect(id)}
+                className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+              >
+                {user.name}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </div>
   );
-};
+}
 
-// For backward compatibility with App.tsx which expects LoginPage
-const LoginPage: React.FC<LoginPageProps> = (props) => {
-  try {
-    return <LoginPageWithAuth {...props} />;
-  } catch (e) {
-    // If AuthContext is not available, use local data
-    console.warn('Auth context not available, using local data only');
-    const dummyAuth: AuthContextType = {
-      user: null,
-      session: null,
-      loading: false,
-      signIn: async () => {},
-      signUp: async () => {},
-      signOut: async () => {},
-      getCurrentUser: async () => {},
-    };
-    return <LoginPageContent {...props} auth={dummyAuth} />;
-  }
-};
+// For testing/development without auth context
+export function LoginPage(props: Omit<LoginPageProps, 'auth'>) {
+  const dummyAuth: AuthContextType = {
+    user: null,
+    session: null,
+    loading: false,
+    signIn: async () => {},
+    signUp: async () => {},
+    signOut: () => {},
+  };
+  return <LoginPageContent {...props} auth={dummyAuth} />;
+}
 
 export default LoginPage; 

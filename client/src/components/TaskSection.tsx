@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import TaskList from './TaskList';
 import { User, FilterType, Task } from '../types';
 import { formatDate, formatDisplayDate } from '../utils/dateUtils';
@@ -12,6 +12,8 @@ interface TaskSectionProps {
   onDeleteTask: (taskId: number | string, dateString: string) => void;
   onAddTask: () => void;
   onEditTask: (taskId: number | string, dateString: string) => void;
+  onFreezeTasks: (dateString: string) => void;
+  onUnfreezeTasks: (dateString: string) => void;
 }
 
 const TaskSection: React.FC<TaskSectionProps> = ({
@@ -22,13 +24,33 @@ const TaskSection: React.FC<TaskSectionProps> = ({
   onToggleTask,
   onDeleteTask,
   onAddTask,
-  onEditTask
+  onEditTask,
+  onFreezeTasks,
+  onUnfreezeTasks
 }) => {
   const [filter, setFilter] = useState<FilterType>('all');
+  const [isFrozen, setIsFrozen] = useState(false);
   
   const dateString = formatDate(selectedDate);
   const totalTasks = tasks?.length || 0;
   const completedTasks = tasks?.filter(task => task.completed).length || 0;
+
+  // Update isFrozen state when tasks or selectedDate changes
+  useEffect(() => {
+    const hasFrozenTask = tasks.some(task => 
+      task.name.toLowerCase().includes('frozen') && 
+      task.date === dateString
+    );
+    setIsFrozen(hasFrozenTask);
+  }, [tasks, dateString]);
+
+  const handleFreezeToggle = () => {
+    if (isFrozen) {
+      onUnfreezeTasks(dateString);
+    } else {
+      onFreezeTasks(dateString);
+    }
+  };
 
   const filteredTasks = filter === 'all' 
     ? tasks || []
@@ -55,7 +77,19 @@ const TaskSection: React.FC<TaskSectionProps> = ({
               {completedTasks}/{totalTasks} KPI hoàn thành
             </p>
           </div>
-          <div className="mt-4 md:mt-0">
+          <div className="mt-4 md:mt-0 flex items-center space-x-4">
+            <div className="flex items-center">
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="sr-only peer"
+                  checked={isFrozen}
+                  onChange={handleFreezeToggle}
+                />
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                <span className="ml-3 text-sm font-medium text-gray-700">Freeze</span>
+              </label>
+            </div>
             <button 
               onClick={onAddTask}
               className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center"

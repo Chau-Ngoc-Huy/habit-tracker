@@ -290,3 +290,41 @@ func GetUserStreak(c *gin.Context) {
 		"user_id": userID,
 	})
 }
+
+// DeleteFrozenTasks deletes all frozen tasks for a specific date
+func DeleteFrozenTasks(c *gin.Context) {
+	date := c.Query("date")
+	userID := c.Query("user_id")
+
+	if date == "" || userID == "" {
+		SendBadRequest(c, "Date and user_id are required", nil)
+		return
+	}
+
+	objectID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		SendBadRequest(c, "Invalid user ID", err)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// Create filter to match frozen tasks for the specific date and user
+	filter := bson.M{
+		"user_id": objectID,
+		"date":    date,
+		"name":    bson.M{"$regex": "frozen", "$options": "i"},
+	}
+
+	result, err := db.TaskColl.DeleteMany(ctx, filter)
+	if err != nil {
+		SendInternalError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Frozen tasks deleted successfully",
+		"count":   result.DeletedCount,
+	})
+}

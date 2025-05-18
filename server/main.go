@@ -53,6 +53,7 @@ func main() {
 		api.POST("/tasks", handlers.CreateTask)
 		api.PATCH("/tasks/:id", handlers.UpdateTask)
 		api.DELETE("/tasks/:id", handlers.DeleteTask)
+		api.DELETE("/tasks/frozen", handlers.DeleteFrozenTasks)
 	}
 
 	// Start server

@@ -7,7 +7,7 @@ import { User, Task } from '../types';
 import { formatDate } from '../utils/dateUtils';
 import ProgressCard from './ProgressCard';
 import Calendar from './Calendar';
-import { createTask, updateTask, deleteTask, getTasksByUserId, updateUser, getUserStreak } from '../lib/apiClient';
+import { createTask, updateTask, deleteTask, getTasksByUserId, updateUser, getUserStreak, deleteFrozenTasks } from '../lib/apiClient';
 
 interface DashboardProps {
   currentUser: string | null;
@@ -242,50 +242,46 @@ const Dashboard: React.FC<DashboardProps> = ({
     }
   };
 
-  // Calculate streak function
-  const calculateStreak = (userObj: User): number => {
-    let streak = 0;
-    const today = new Date();
-    let currentDate = new Date(today);
-    
-    const hasCompletedTasks = (date: Date): boolean => {
-      const dateString = formatDate(date);
-      const tasks = userObj.tasks[dateString] || [];
-      return tasks.some(task => task.completed);
-    };
-    
-    // Check if today has completed tasks
-    if (hasCompletedTasks(currentDate)) {
-      streak = 1;
+  const handleFreezeTasks = async (dateString: string) => {
+    if (!currentUser) return;
+
+    try {
+      // Create a frozen task
+      const frozenTask = await createTask({
+        name: 'Frozen',
+        completed: false,
+        user_id: currentUser,
+        date: dateString
+      });
       
-      // Check previous days
-      let previousDate = new Date(currentDate);
-      previousDate.setDate(previousDate.getDate() - 1);
+      setTasks(prevTasks => [...(prevTasks || []), frozenTask]);
       
-      while (hasCompletedTasks(previousDate)) {
-        streak++;
-        previousDate.setDate(previousDate.getDate() - 1);
-      }
-    } else {
-      // Check if yesterday has completed tasks
-      let yesterdayDate = new Date(currentDate);
-      yesterdayDate.setDate(yesterdayDate.getDate() - 1);
-      
-      if (hasCompletedTasks(yesterdayDate)) {
-        streak = 1;
-        
-        // Check previous days
-        let previousDate = new Date(yesterdayDate);
-        previousDate.setDate(previousDate.getDate() - 1);
-        
-        while (hasCompletedTasks(previousDate)) {
-          streak++;
-          previousDate.setDate(previousDate.getDate() - 1);
-        }
-      }
+      // Fetch updated streak after freezing tasks
+      await fetchTasksAndStreak();
+    } catch (error) {
+      console.error('Error freezing tasks:', error);
     }
-    
-    return streak;
+  };
+
+  const handleUnfreezeTasks = async (dateString: string) => {
+    if (!currentUser) return;
+
+    try {
+      // Delete all frozen tasks for the date
+      await deleteFrozenTasks(currentUser, dateString);
+      
+      // Update local state by removing frozen tasks
+      setTasks(prevTasks => 
+        prevTasks.filter(task => 
+          !(task.date === dateString && task.name.toLowerCase() === 'frozen')
+        )
+      );
+      
+      // Fetch updated streak after unfreezing tasks
+      await fetchTasksAndStreak();
+    } catch (error) {
+      console.error('Error unfreezing tasks:', error);
+    }
   };
 
   return (
@@ -310,6 +306,8 @@ const Dashboard: React.FC<DashboardProps> = ({
               onDeleteTask={handleDeleteTask}
               onAddTask={() => setShowAddModal(true)}
               onEditTask={handleEditTask}
+              onFreezeTasks={handleFreezeTasks}
+              onUnfreezeTasks={handleUnfreezeTasks}
             />
             <StatsSection 
               user={user}
