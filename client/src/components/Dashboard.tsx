@@ -284,7 +284,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-180">
       <Header 
         user={user} 
         users={users} 

@@ -1,16 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, Task } from '../types';
 import { formatDate, formatDisplayMonth } from '../utils/dateUtils';
+import { getTasksByMonth } from '../lib/apiClient';
 
 interface CalendarProps {
   user: User;
-  tasks: Task[];
   selectedDate: Date;
   setSelectedDate: (date: Date) => void;
 }
 
-const Calendar: React.FC<CalendarProps> = ({ user, tasks, selectedDate, setSelectedDate }) => {
+const Calendar: React.FC<CalendarProps> = ({ user, selectedDate, setSelectedDate }) => {
   const [calendarDate, setCalendarDate] = useState(new Date());
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Fetch tasks for the current month
+  useEffect(() => {
+    const fetchTasks = async () => {
+      setIsLoading(true);
+      try {
+        const monthTasks = await getTasksByMonth(
+          user.id,
+          calendarDate.getFullYear(),
+          calendarDate.getMonth()
+        );
+        setTasks(monthTasks);
+      } catch (error) {
+        console.error('Error fetching tasks:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTasks();
+  }, [user.id, calendarDate]);
 
   // Check if a date has tasks
   const hasTasks = (date: Date): boolean => {
@@ -120,12 +143,13 @@ const Calendar: React.FC<CalendarProps> = ({ user, tasks, selectedDate, setSelec
 
   return (
     <div className="bg-white rounded-xl shadow-sm p-6">
-      <h3 className="text-lg font-bold text-gray-800 mb-4">Lịch</h3>
+      {/* <h3 className="text-lg font-bold text-gray-800 mb-4">Lịch</h3> */}
       <div className="mb-4">
         <div className="flex justify-between items-center mb-4">
           <button 
             onClick={handlePrevMonth}
             className="text-gray-500 hover:text-gray-700"
+            disabled={isLoading}
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -137,6 +161,7 @@ const Calendar: React.FC<CalendarProps> = ({ user, tasks, selectedDate, setSelec
           <button 
             onClick={handleNextMonth}
             className="text-gray-500 hover:text-gray-700"
+            disabled={isLoading}
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
@@ -152,30 +177,22 @@ const Calendar: React.FC<CalendarProps> = ({ user, tasks, selectedDate, setSelec
           <div className="text-xs font-medium text-gray-500 calendar-day">T6</div>
           <div className="text-xs font-medium text-gray-500 calendar-day">T7</div>
         </div>
-        <div className="grid grid-cols-7 gap-1 text-center mb-2">
+        <div className="grid grid-cols-7 gap-1 text-center mb-2 relative">
+          {isLoading && (
+            <div className="absolute inset-0 bg-white/50 flex items-center justify-center z-10">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+            </div>
+          )}
+          
           {days.map((date, index) => (
             <div
               key={index}
               className={date ? getDayClasses(date) : ''}
-              onClick={() => date && setSelectedDate(date)}
+              onClick={() => date && !isLoading && setSelectedDate(date)}
             >
               {date ? date.getDate() : ''}
             </div>
           ))}
-        </div>
-      </div>
-      <div className="flex items-center justify-between text-sm text-gray-600">
-        <div className="flex items-center">
-          <div className="w-3 h-3 bg-indigo-600 rounded-full mr-2"></div>
-          <span>Hôm nay</span>
-        </div>
-        <div className="flex items-center">
-          <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-          <span>Hoàn thành</span>
-        </div>
-        <div className="flex items-center">
-          <div className="w-3 h-3 border-2 border-indigo-600 rounded-full mr-2"></div>
-          <span>Có KPI</span>
         </div>
       </div>
     </div>

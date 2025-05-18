@@ -40,6 +40,15 @@ func buildTaskFilter(c *gin.Context) (bson.M, error) {
 		filter["date"] = date
 	}
 
+	if startDate := c.Query("start_date"); startDate != "" {
+		if endDate := c.Query("end_date"); endDate != "" {
+			filter["date"] = bson.M{
+				"$gte": startDate,
+				"$lte": endDate,
+			}
+		}
+	}
+
 	if userID := c.Query("user_id"); userID != "" {
 		objectID, err := primitive.ObjectIDFromHex(userID)
 		if err != nil {

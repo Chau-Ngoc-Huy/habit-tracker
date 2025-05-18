@@ -12,6 +12,7 @@ type User struct {
 	Email        string             `bson:"email" json:"email"`
 	PasswordHash string             `bson:"password_hash" json:"password_hash" validate:"required"`
 	Streak       int                `bson:"streak" json:"streak"`
+	AvatarURL    string             `bson:"avatar_url" json:"avatarURL"`
 	CreatedAt    time.Time          `bson:"created_at" json:"created_at"`
 }
 

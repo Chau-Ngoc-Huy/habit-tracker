@@ -21,11 +21,12 @@ const StatsSection: React.FC<StatsSectionProps> = ({
     <div>
       <Calendar
         user={user}
-        tasks={tasks}
         selectedDate={selectedDate}
         setSelectedDate={setSelectedDate}
       />
-      <StreakCard user={user} />
+      <div className="mt-4">
+        <StreakCard user={user} />
+      </div>
     </div>
   );
 };

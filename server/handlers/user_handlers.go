@@ -155,8 +155,9 @@ func UpdateUser(c *gin.Context) {
 // parseUserUpdateData parses and validates the update data from the request body
 func parseUserUpdateData(c *gin.Context) (bson.M, error) {
 	var updateData struct {
-		Name   string `json:"name"`
-		Streak int    `json:"streak"`
+		Name      string `json:"name"`
+		Streak    int    `json:"streak"`
+		AvatarURL string `json:"avatarURL"`
 	}
 
 	if err := c.ShouldBindJSON(&updateData); err != nil {
@@ -167,8 +168,9 @@ func parseUserUpdateData(c *gin.Context) (bson.M, error) {
 
 	return bson.M{
 		"$set": bson.M{
-			"name":   updateData.Name,
-			"streak": updateData.Streak,
+			"name":       updateData.Name,
+			"streak":     updateData.Streak,
+			"avatar_url": updateData.AvatarURL,
 		},
 	}, nil
 }

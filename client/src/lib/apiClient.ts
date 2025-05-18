@@ -9,6 +9,7 @@ export type User = {
   password_hash: string;
   created_at?: string;
   streak: number;
+  avatar_url?: string
 };
 
 export type Task = {
@@ -66,6 +67,15 @@ export const getTasks = async (): Promise<Task[]> => {
 
 export const getTasksByUserId = async (userId: string): Promise<Task[]> => {
   const response = await fetch(`${API_BASE_URL}/tasks?user_id=${userId}`);
+  return handleResponse<Task[]>(response);
+};
+
+export const getTasksByMonth = async (userId: string, year: number, month: number): Promise<Task[]> => {
+  // Create start and end dates for the month
+  const startDate = new Date(year, month, 1).toISOString().split('T')[0];
+  const endDate = new Date(year, month + 1, 1).toISOString().split('T')[0];
+  
+  const response = await fetch(`${API_BASE_URL}/tasks?user_id=${userId}&start_date=${startDate}&end_date=${endDate}`);
   return handleResponse<Task[]>(response);
 };
 

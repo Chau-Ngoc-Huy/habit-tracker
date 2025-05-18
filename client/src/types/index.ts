@@ -10,6 +10,7 @@ export interface User {
   name: string;
   tasks: Record<string, Task[]>;
   streak: number;
+  avatarURL?: string;  // Optional avatar URL field
 }
 
 export type FilterType = 'all' | 'pending' | 'completed'; 
