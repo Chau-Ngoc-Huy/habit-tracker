@@ -5,7 +5,6 @@ import StatsSection from './StatsSection';
 import AddTaskModal from './AddTaskModal';
 import { User, Task } from '../types';
 import { formatDate } from '../utils/dateUtils';
-import ProgressCard from './ProgressCard';
 import Calendar from './Calendar';
 import { createTask, updateTask, deleteTask, getTasksByUserId, updateUser, getUserStreak, deleteFrozenTasks } from '../lib/apiClient';
 

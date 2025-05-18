@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: habit-tracker-api
+    env: go
+    rootDir: server
+    buildCommand: go mod download && go build -o main .
+    startCommand: ./main
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: PORT
+        value: 8080 
