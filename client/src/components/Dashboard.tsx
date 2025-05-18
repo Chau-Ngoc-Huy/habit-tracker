@@ -308,18 +308,12 @@ const Dashboard: React.FC<DashboardProps> = ({
               onFreezeTasks={handleFreezeTasks}
               onUnfreezeTasks={handleUnfreezeTasks}
             />
-            <StatsSection 
-              user={user}
-              tasks={tasks || []}
-              selectedDate={selectedDate}
-              setSelectedDate={setSelectedDate}
-            />
           </div>
 
           <div className="space-y-8">
-            <Calendar
+            <StatsSection 
               user={user}
-              tasks={tasks}
+              tasks={tasks || []}
               selectedDate={selectedDate}
               setSelectedDate={setSelectedDate}
             />

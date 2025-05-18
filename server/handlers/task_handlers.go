@@ -17,67 +17,71 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-// GetTasks returns all tasks, optionally filtered by date
+// GetTasks returns all tasks, optionally filtered by date and user_id
 func GetTasks(c *gin.Context) {
-	var tasks []models.Task
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	// Get filters from query parameters
-	date := c.Query("date")
-	userID := c.Query("user_id")
-
-	// Build filter
-	filter := bson.M{}
-	if date != "" {
-		filter["date"] = date
-	}
-	if userID != "" {
-		objectID, err := primitive.ObjectIDFromHex(userID)
-		if err != nil {
-			SendBadRequest(c, "Invalid user ID", err)
-			return
-		}
-		filter["user_id"] = objectID
-	}
-
-	cursor, err := db.TaskColl.Find(ctx, filter)
+	filter, err := buildTaskFilter(c)
 	if err != nil {
-		SendInternalError(c, err)
 		return
 	}
-	defer cursor.Close(ctx)
 
-	if err = cursor.All(ctx, &tasks); err != nil {
-		SendInternalError(c, err)
+	tasks, err := fetchTasksWithFilter(c, filter)
+	if err != nil {
 		return
 	}
 
 	c.JSON(http.StatusOK, tasks)
 }
 
-// GetTasksByUserId returns tasks for a specific user
-func GetTasksByUserId(c *gin.Context) {
-	userID := c.Param("userId")
-	objectID, err := primitive.ObjectIDFromHex(userID)
-	if err != nil {
-		SendBadRequest(c, "Invalid user ID", err)
-		return
+// buildTaskFilter constructs a MongoDB filter based on query parameters
+func buildTaskFilter(c *gin.Context) (bson.M, error) {
+	filter := bson.M{}
+
+	if date := c.Query("date"); date != "" {
+		filter["date"] = date
 	}
 
-	var tasks []models.Task
+	if userID := c.Query("user_id"); userID != "" {
+		objectID, err := primitive.ObjectIDFromHex(userID)
+		if err != nil {
+			SendBadRequest(c, "Invalid user ID", err)
+			return nil, err
+		}
+		filter["user_id"] = objectID
+	}
+
+	return filter, nil
+}
+
+// fetchTasksWithFilter retrieves tasks based on the provided filter
+func fetchTasksWithFilter(c *gin.Context, filter bson.M) ([]models.Task, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	cursor, err := db.TaskColl.Find(ctx, bson.M{"userId": objectID})
+	cursor, err := db.TaskColl.Find(ctx, filter)
 	if err != nil {
 		SendInternalError(c, err)
-		return
+		return nil, err
 	}
 	defer cursor.Close(ctx)
 
+	var tasks []models.Task
 	if err = cursor.All(ctx, &tasks); err != nil {
 		SendInternalError(c, err)
+		return nil, err
+	}
+
+	return tasks, nil
+}
+
+// GetTasksByUserId returns tasks for a specific user
+func GetTasksByUserId(c *gin.Context) {
+	userID, err := validateAndGetUserID(c)
+	if err != nil {
+		return
+	}
+
+	tasks, err := fetchTasksWithFilter(c, bson.M{"userId": userID})
+	if err != nil {
 		return
 	}
 
@@ -86,68 +90,116 @@ func GetTasksByUserId(c *gin.Context) {
 
 // CreateTask creates a new task
 func CreateTask(c *gin.Context) {
+	task, err := parseAndValidateTask(c)
+	if err != nil {
+		return
+	}
+
+	if err := validateUserExists(c, task.UserID); err != nil {
+		return
+	}
+
+	createdTask, err := insertTask(c, task)
+	if err != nil {
+		return
+	}
+
+	c.JSON(http.StatusCreated, createdTask)
+}
+
+// parseAndValidateTask parses and validates the task from the request body
+func parseAndValidateTask(c *gin.Context) (models.Task, error) {
 	var task models.Task
 	if err := c.ShouldBindJSON(&task); err != nil {
 		SendBadRequest(c, "Invalid request body", err)
-		return
+		return models.Task{}, err
 	}
 
-	// Verify user exists
-	userID, err := primitive.ObjectIDFromHex(task.UserID.Hex())
-	if err != nil {
-		SendBadRequest(c, "Invalid user ID", err)
-		return
+	if task.Date == "" {
+		task.Date = time.Now().Format(time.RFC3339)
 	}
+	task.CreatedAt = time.Now()
 
+	return task, nil
+}
+
+// validateUserExists checks if the user exists in the database
+func validateUserExists(c *gin.Context, userID primitive.ObjectID) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	var user models.User
-	err = db.UserColl.FindOne(ctx, bson.M{"_id": userID}).Decode(&user)
+	err := db.UserColl.FindOne(ctx, bson.M{"_id": userID}).Decode(&user)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			SendNotFound(c, "User not found")
-			return
+			return err
 		}
 		SendInternalError(c, err)
-		return
+		return err
 	}
+	return nil
+}
 
-	task.CreatedAt = time.Now()
-	if task.Date == "" {
-		task.Date = time.Now().Format(time.RFC3339)
-	}
+// insertTask inserts a new task into the database
+func insertTask(c *gin.Context, task models.Task) (models.Task, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
 	result, err := db.TaskColl.InsertOne(ctx, task)
 	if err != nil {
 		SendInternalError(c, err)
-		return
+		return models.Task{}, err
 	}
 
 	task.ID = result.InsertedID.(primitive.ObjectID)
-	c.JSON(http.StatusCreated, task)
+	return task, nil
 }
 
 // UpdateTask updates a task
 func UpdateTask(c *gin.Context) {
+	taskID, err := validateAndGetTaskID(c)
+	if err != nil {
+		return
+	}
+
+	updateData, err := parseUpdateData(c)
+	if err != nil {
+		return
+	}
+
+	updatedTask, err := performTaskUpdate(c, taskID, updateData)
+	if err != nil {
+		return
+	}
+
+	c.JSON(http.StatusOK, updatedTask)
+}
+
+// validateAndGetTaskID validates the task ID from the request
+func validateAndGetTaskID(c *gin.Context) (primitive.ObjectID, error) {
 	id := c.Param("id")
 	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		SendBadRequest(c, "Invalid task ID", err)
-		return
+		return primitive.NilObjectID, err
 	}
+	return objectID, nil
+}
 
+// parseUpdateData parses and validates the update data from the request body
+func parseUpdateData(c *gin.Context) (bson.M, error) {
 	var updateData struct {
 		Name      *string `json:"name"`
 		Completed *bool   `json:"completed"`
 		Date      *string `json:"date"`
 	}
+
 	if err := c.ShouldBindJSON(&updateData); err != nil {
 		SendBadRequest(c, "Invalid request body", err)
-		return
+		return nil, err
 	}
 
-	// Only include non-nil fields in the update
 	updateFields := bson.M{}
 	if updateData.Name != nil {
 		updateFields["name"] = *updateData.Name
@@ -159,23 +211,23 @@ func UpdateTask(c *gin.Context) {
 		updateFields["date"] = *updateData.Date
 	}
 
-	// If no fields to update, return bad request
 	if len(updateFields) == 0 {
 		SendBadRequest(c, "No valid fields to update", nil)
-		return
+		return nil, fmt.Errorf("no valid fields to update")
 	}
 
-	update := bson.M{
-		"$set": updateFields,
-	}
+	return bson.M{"$set": updateFields}, nil
+}
 
+// performTaskUpdate executes the task update in the database
+func performTaskUpdate(c *gin.Context, taskID primitive.ObjectID, update bson.M) (models.Task, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	var updatedTask models.Task
-	err = db.TaskColl.FindOneAndUpdate(
+	err := db.TaskColl.FindOneAndUpdate(
 		ctx,
-		bson.M{"_id": objectID},
+		bson.M{"_id": taskID},
 		update,
 		options.FindOneAndUpdate().SetReturnDocument(options.After),
 	).Decode(&updatedTask)
@@ -183,116 +235,157 @@ func UpdateTask(c *gin.Context) {
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			SendNotFound(c, "Task not found")
-			return
+			return models.Task{}, err
 		}
 		SendInternalError(c, err)
-		return
+		return models.Task{}, err
 	}
 
-	c.JSON(http.StatusOK, updatedTask)
+	return updatedTask, nil
 }
 
 // DeleteTask deletes a task
 func DeleteTask(c *gin.Context) {
-	id := c.Param("id")
-	objectID, err := primitive.ObjectIDFromHex(id)
+	taskID, err := validateAndGetTaskID(c)
 	if err != nil {
-		SendBadRequest(c, "Invalid task ID", err)
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	result, err := db.TaskColl.DeleteOne(ctx, bson.M{"_id": objectID})
-	if err != nil {
-		SendInternalError(c, err)
-		return
-	}
-
-	if result.DeletedCount == 0 {
-		SendNotFound(c, "Task not found")
+	if err := performTaskDeletion(c, taskID); err != nil {
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Task deleted successfully"})
 }
 
-// GetUserStreak returns the current streak of completed tasks for a user
+// performTaskDeletion executes the task deletion in the database
+func performTaskDeletion(c *gin.Context, taskID primitive.ObjectID) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	result, err := db.TaskColl.DeleteOne(ctx, bson.M{"_id": taskID})
+	if err != nil {
+		SendInternalError(c, err)
+		return err
+	}
+
+	if result.DeletedCount == 0 {
+		SendNotFound(c, "Task not found")
+		return fmt.Errorf("task not found")
+	}
+
+	return nil
+}
+
+// dateTaskInfo represents the completion status of tasks for a specific date
+type dateTaskInfo struct {
+	total     int
+	completed int
+	frozen    bool
+}
+
+// GetUserStreak returns the current streak of completed tasks for a user.
+// A streak is maintained when all non-frozen tasks are completed for consecutive days.
 func GetUserStreak(c *gin.Context) {
+	userID, err := validateAndGetUserID(c)
+	if err != nil {
+		return
+	}
+
+	tasks, err := fetchUserTasks(c, userID)
+	if err != nil {
+		return
+	}
+
+	dateTasks := groupTasksByDate(tasks)
+	streak := calculateStreak(dateTasks)
+
+	c.JSON(http.StatusOK, gin.H{
+		"streak":  streak,
+		"user_id": userID.Hex(),
+	})
+}
+
+// validateAndGetUserID validates the user ID from the request and returns the ObjectID
+func validateAndGetUserID(c *gin.Context) (primitive.ObjectID, error) {
 	userID := c.Param("userId")
 	objectID, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
 		SendBadRequest(c, "Invalid user ID", err)
-		return
+		return primitive.NilObjectID, err
 	}
+	return objectID, nil
+}
 
+// fetchUserTasks retrieves all tasks for a given user
+func fetchUserTasks(c *gin.Context, userID primitive.ObjectID) ([]models.Task, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	// Get all tasks for the user
-	filter := bson.M{
-		"user_id": objectID,
-	}
-
-	cursor, err := db.TaskColl.Find(ctx, filter)
+	cursor, err := db.TaskColl.Find(ctx, bson.M{"user_id": userID})
 	if err != nil {
 		SendInternalError(c, err)
-		return
+		return nil, err
 	}
 	defer cursor.Close(ctx)
 
 	var tasks []models.Task
 	if err = cursor.All(ctx, &tasks); err != nil {
 		SendInternalError(c, err)
-		return
+		return nil, err
 	}
+	return tasks, nil
+}
 
-	// Group tasks by date and track completion status
-	dateTasks := make(map[string]struct {
-		total     int
-		completed int
-		frozen    bool
-	})
+// groupTasksByDate organizes tasks by date and tracks their completion status
+func groupTasksByDate(tasks []models.Task) map[string]dateTaskInfo {
+	dateTasks := make(map[string]dateTaskInfo)
 
 	for _, task := range tasks {
 		dateStr := task.Date[:10] // Get YYYY-MM-DD format
-		dateInfo := dateTasks[dateStr]
-		dateInfo.total++
+		info := dateTasks[dateStr]
+		info.total++
+
 		if strings.Contains(strings.ToLower(task.Name), "frozen") {
-			dateInfo.frozen = true
+			info.frozen = true
 		} else if task.Completed {
-			dateInfo.completed++
+			info.completed++
 		}
-		dateTasks[dateStr] = dateInfo
+		dateTasks[dateStr] = info
 	}
 
-	// Calculate streak
+	return dateTasks
+}
+
+// calculateStreak determines the current streak of completed tasks
+func calculateStreak(dateTasks map[string]dateTaskInfo) int {
 	streak := 0
 	currentDate := time.Now()
 
-	// Check consecutive days backwards from today
+	// Check today's tasks
+	dateStr := currentDate.Format(time.RFC3339)[:10]
+	if info := dateTasks[dateStr]; !info.frozen && info.completed == info.total {
+		streak++
+	}
+
+	// Check previous days
 	for {
-		dateStr := currentDate.Format(time.RFC3339)[:10] // Get YYYY-MM-DD format
-		dateInfo := dateTasks[dateStr]
-		fmt.Printf("Checking date: %s, total: %d, completed: %d, frozen: %v\n", dateStr, dateInfo.total, dateInfo.completed, dateInfo.frozen)
-		// If the date has no tasks or is not frozen and not all tasks are completed, break the streak
-		if dateInfo.total == 0 || (!dateInfo.frozen && dateInfo.completed < dateInfo.total && currentDate != time.Now()) {
+		currentDate = currentDate.AddDate(0, 0, -1)
+		dateStr := currentDate.Format(time.RFC3339)[:10]
+		info := dateTasks[dateStr]
+
+		// Break streak if no tasks or incomplete tasks
+		if info.total == 0 || (!info.frozen && info.completed < info.total) {
 			break
 		}
 
-		// Only increment streak for dates where all tasks are completed (not frozen)
-		if !dateInfo.frozen && dateInfo.completed == dateInfo.total {
+		// Only count days where all tasks are completed
+		if !info.frozen && info.completed == info.total {
 			streak++
 		}
-
-		currentDate = currentDate.AddDate(0, 0, -1)
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"streak":  streak,
-		"user_id": userID,
-	})
+	return streak
 }
 
 // DeleteFrozenTasks deletes all frozen tasks for a specific date

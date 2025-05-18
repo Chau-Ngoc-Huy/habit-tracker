@@ -30,26 +30,26 @@ const StreakCard: React.FC<StreakCardProps> = ({ user }) => {
 
   return (
     <div className="bg-white rounded-xl shadow-sm p-6">
-      <h3 className="text-lg font-bold text-gray-800 mb-4">Streak hiện tại</h3>
+      <h3 className="text-lg font-bold text-gray-800 mb-4">Streak</h3>
       <div className="flex items-center justify-center">
-        <div className="relative">
-          <div className="streak-flame streak-pulse">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-red-500" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clipRule="evenodd" />
+        <div className="relative streak-flame streak-pulse">
+          <div>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-36 w-36 text-red-500" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 16c3.314 0 6-2 6-5.5 0-1.5-.5-4-2.5-6 .25 1.5-1.25 2-1.25 2C11 4 9 .5 6 0c.357 2 .5 4-2 6-1.25 1-2 2.729-2 4.5C2 14 4.686 16 8 16m0-1c-1.657 0-3-1-3-2.75 0-.75.25-2 1.25-3C6.125 10 7 10.5 7 10.5c-.375-1.25.5-3.25 2-3.5-.179 1-.25 2 1 3 .625.5 1 1.364 1 2.25C11 14 9.657 15 8 15"/>
             </svg>
           </div>
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-2xl font-bold text-white">{streak}</span>
+            <span className="text-2xl font-bold mt-20 text-red-500">{streak}</span>
           </div>
         </div>
-        <div className="ml-6">
+        <div className="ml-4">
           <h4 className="text-xl font-bold text-gray-800">
             <span>{streak}</span> ngày
           </h4>
           <p className="text-gray-600">Liên tiếp hoàn thành</p>
         </div>
       </div>
-      <div className="mt-4">
+      {/* <div className="mt-4">
         <div className="bg-gray-100 rounded-full h-2 mt-2">
           <div 
             className="bg-red-500 h-2 rounded-full transition-all duration-300" 
@@ -63,7 +63,7 @@ const StreakCard: React.FC<StreakCardProps> = ({ user }) => {
           <span>21</span>
           <span>30</span>
         </div>
-      </div>
+      </div> */}
       <div className="mt-4 text-center">
         <p className="text-sm text-gray-600">
           {getStreakMessage(streak)}
