@@ -22,7 +22,8 @@ func GetUsers(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	cursor, err := db.UserColl.Find(ctx, bson.M{})
+	findOptions := options.Find().SetSort(bson.D{{Key: "created_at", Value: -1}})
+	cursor, err := db.UserColl.Find(ctx, bson.M{}, findOptions)
 	if err != nil {
 		log.Printf("Error finding users: %v", err)
 		SendInternalError(c, err)
