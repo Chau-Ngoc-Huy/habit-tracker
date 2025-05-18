@@ -229,13 +229,9 @@ func GetUserStreak(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	// Get all tasks for the user (both completed and frozen)
+	// Get all tasks for the user
 	filter := bson.M{
 		"user_id": objectID,
-		"$or": []bson.M{
-			{"completed": true},
-			{"name": bson.M{"$regex": "frozen", "$options": "i"}},
-		},
 	}
 
 	cursor, err := db.TaskColl.Find(ctx, filter)
@@ -251,34 +247,40 @@ func GetUserStreak(c *gin.Context) {
 		return
 	}
 
-	// Create maps to track completed and frozen dates
-	completedDates := make(map[string]bool)
-	frozenDates := make(map[string]bool)
+	// Group tasks by date and track completion status
+	dateTasks := make(map[string]struct {
+		total     int
+		completed int
+		frozen    bool
+	})
 
 	for _, task := range tasks {
 		dateStr := task.Date[:10] // Get YYYY-MM-DD format
+		dateInfo := dateTasks[dateStr]
+		dateInfo.total++
 		if strings.Contains(strings.ToLower(task.Name), "frozen") {
-			frozenDates[dateStr] = true
+			dateInfo.frozen = true
 		} else if task.Completed {
-			completedDates[dateStr] = true
+			dateInfo.completed++
 		}
+		dateTasks[dateStr] = dateInfo
 	}
 
 	// Calculate streak
 	streak := 0
-	currentDate := time.Now() // Start from yesterday
+	currentDate := time.Now()
 
-	// Check consecutive days backwards from yesterday
+	// Check consecutive days backwards from today
 	for {
 		dateStr := currentDate.Format(time.RFC3339)[:10] // Get YYYY-MM-DD format
-
-		// If the date has neither completed nor frozen tasks, break the streak
-		if !completedDates[dateStr] && !frozenDates[dateStr] && currentDate != time.Now() {
+		dateInfo := dateTasks[dateStr]
+		// If the date has no tasks or is not frozen and not all tasks are completed, break the streak
+		if dateInfo.total == 0 || (!dateInfo.frozen && dateInfo.completed < dateInfo.total && currentDate != time.Now()) {
 			break
 		}
 
-		// Only increment streak for completed dates (not frozen)
-		if completedDates[dateStr] {
+		// Only increment streak for dates where all tasks are completed (not frozen)
+		if !dateInfo.frozen && dateInfo.completed == dateInfo.total {
 			streak++
 		}
 
