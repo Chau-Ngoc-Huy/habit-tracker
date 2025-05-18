@@ -1,17 +1,18 @@
 import React from 'react';
-import { User } from '../types';
+import { User, Task } from '../types';
 import { formatDate } from '../utils/dateUtils';
 
 interface ProgressCardProps {
   user: User;
+  tasks: Task[];
   selectedDate: Date;
 }
 
-const ProgressCard: React.FC<ProgressCardProps> = ({ user, selectedDate }) => {
+const ProgressCard: React.FC<ProgressCardProps> = ({ user, tasks, selectedDate }) => {
   const dateString = formatDate(selectedDate);
-  const tasks = user.tasks[dateString] || [];
-  const totalTasks = tasks.length;
-  const completedTasks = tasks.filter(task => task.completed).length;
+  const dateTasks = tasks?.filter(task => task.date === dateString) || [];
+  const totalTasks = dateTasks.length;
+  const completedTasks = dateTasks.filter(task => task.completed).length;
   const pendingTasks = totalTasks - completedTasks;
   
   // Calculate percentage

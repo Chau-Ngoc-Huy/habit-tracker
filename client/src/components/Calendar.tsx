@@ -1,34 +1,35 @@
 import React, { useState } from 'react';
-import { User } from '../types';
+import { User, Task } from '../types';
 import { formatDate, formatDisplayMonth } from '../utils/dateUtils';
 
 interface CalendarProps {
   user: User;
+  tasks: Task[];
   selectedDate: Date;
   setSelectedDate: (date: Date) => void;
 }
 
-const Calendar: React.FC<CalendarProps> = ({ user, selectedDate, setSelectedDate }) => {
+const Calendar: React.FC<CalendarProps> = ({ user, tasks, selectedDate, setSelectedDate }) => {
   const [calendarDate, setCalendarDate] = useState(new Date());
 
   // Check if a date has tasks
   const hasTasks = (date: Date): boolean => {
     const dateString = formatDate(date);
-    return (user.tasks[dateString] && user.tasks[dateString].length > 0) || false;
+    return tasks?.some(task => task.date === dateString) || false;
   };
 
   // Check if all tasks for a date are completed
   const hasCompletedTasks = (date: Date): boolean => {
     const dateString = formatDate(date);
-    const tasks = user.tasks[dateString] || [];
-    return tasks.length > 0 && tasks.every(task => task.completed);
+    const dateTasks = tasks?.filter(task => task.date === dateString) || [];
+    return dateTasks.length > 0 && dateTasks.every(task => task.completed);
   };
 
   // Check if some tasks for a date are completed
   const hasSomeCompletedTasks = (date: Date): boolean => {
     const dateString = formatDate(date);
-    const tasks = user.tasks[dateString] || [];
-    return tasks.some(task => task.completed);
+    const dateTasks = tasks?.filter(task => task.date === dateString) || [];
+    return dateTasks.some(task => task.completed);
   };
 
   // Get calendar days
@@ -77,7 +78,7 @@ const Calendar: React.FC<CalendarProps> = ({ user, selectedDate, setSelectedDate
     if (date.getDate() === today.getDate() && 
         date.getMonth() === today.getMonth() && 
         date.getFullYear() === today.getFullYear()) {
-      classes += ' active';
+      classes += ' today';
     }
     
     // Check if date is selected date

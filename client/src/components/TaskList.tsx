@@ -4,8 +4,8 @@ import { Task } from '../types';
 interface TaskListProps {
   tasks: Task[];
   dateString: string;
-  onToggleTask: (taskId: number, dateString: string) => void;
-  onDeleteTask: (taskId: number, dateString: string) => void;
+  onToggleTask: (taskId: number | string, dateString: string) => void;
+  onDeleteTask: (taskId: number | string, dateString: string) => void;
   onAddTask: () => void;
 }
 

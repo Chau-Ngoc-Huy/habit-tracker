@@ -38,6 +38,10 @@ body {
   color: white;
 }
 
+.calendar-day.today {
+  font-weight: bold;
+}
+
 .calendar-day.has-tasks {
   border: 2px solid #6366f1;
 }

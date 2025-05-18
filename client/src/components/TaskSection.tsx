@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import TaskList from './TaskList';
-import { User, FilterType } from '../types';
+import { User, FilterType, Task } from '../types';
 import { formatDate, formatDisplayDate } from '../utils/dateUtils';
 
 interface TaskSectionProps {
   selectedDate: Date;
   setSelectedDate: (date: Date) => void;
   user: User;
-  onToggleTask: (taskId: number, dateString: string) => void;
-  onDeleteTask: (taskId: number, dateString: string) => void;
+  tasks: Task[];
+  onToggleTask: (taskId: number | string, dateString: string) => void;
+  onDeleteTask: (taskId: number | string, dateString: string) => void;
   onAddTask: () => void;
 }
 
@@ -16,6 +17,7 @@ const TaskSection: React.FC<TaskSectionProps> = ({
   selectedDate,
   setSelectedDate,
   user,
+  tasks,
   onToggleTask,
   onDeleteTask,
   onAddTask
@@ -23,15 +25,14 @@ const TaskSection: React.FC<TaskSectionProps> = ({
   const [filter, setFilter] = useState<FilterType>('all');
   
   const dateString = formatDate(selectedDate);
-  const tasks = user.tasks[dateString] || [];
-  const totalTasks = tasks.length;
-  const completedTasks = tasks.filter(task => task.completed).length;
+  const totalTasks = tasks?.length || 0;
+  const completedTasks = tasks?.filter(task => task.completed).length || 0;
 
   const filteredTasks = filter === 'all' 
-    ? tasks 
+    ? tasks || []
     : filter === 'completed' 
-    ? tasks.filter(task => task.completed)
-    : tasks.filter(task => !task.completed);
+    ? (tasks || []).filter(task => task.completed)
+    : (tasks || []).filter(task => !task.completed);
 
   const filterButtons = [
     { id: 'all', label: 'Tất cả' },
