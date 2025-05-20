@@ -1,7 +1,6 @@
-/* Import Tailwind */
-@import 'tailwindcss/base';
-@import 'tailwindcss/components';
-@import 'tailwindcss/utilities';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 /* Custom styles */
 body {
@@ -34,8 +33,6 @@ body {
 }
 
 .calendar-day.active {
-  /* background-color: #6366f1;
-  color: white; */
   outline: 2px solid #3b82f6;
   outline-offset: 2px;
 }

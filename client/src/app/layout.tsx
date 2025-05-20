@@ -1,9 +1,9 @@
-import type { Metadata } from 'next';
-import '../App.css';
+import Providers from '../components/Providers';
+import './globals.css';
 
-export const metadata: Metadata = {
+export const metadata = {
   title: 'Habit Tracker',
-  description: 'Track your habits and achieve your goals',
+  description: 'Track your habits and goals',
 };
 
 export default function RootLayout({
@@ -13,7 +13,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <Providers>
+          {children}
+        </Providers>
+      </body>
     </html>
   );
 } 
