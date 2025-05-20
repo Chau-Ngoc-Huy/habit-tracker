@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { User, Task } from '../types';
-import { formatDate, formatDisplayMonth } from '../utils/dateUtils';
-import { getTasksByMonth } from '../lib/apiClient';
+import { User } from '@/types/api/responses/user.types';
+import { Task } from '@/types/api/responses/task.types';
+import { formatDate, formatDisplayMonth } from '@/utils/helpers/dateUtils';
+import { getTasksByMonth } from '@/lib/apiClient';
 
 interface CalendarProps {
   user: User;

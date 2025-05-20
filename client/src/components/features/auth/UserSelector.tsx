@@ -1,7 +1,7 @@
 import React from 'react';
 import { MenuItems, MenuItem, MenuButton, Menu } from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/20/solid';
-import { User } from '../types';
+import { User } from '@/types/api/responses/user.types';
 
 interface UserSelectorProps {
   user: User;

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import TaskList from './TaskList';
-import { User, FilterType, Task } from '../types';
-import { formatDate, formatDisplayDate } from '../utils/dateUtils';
+import { User } from '@/types/api/responses/user.types';
+import { Task } from '@/types/api/responses/task.types';
+import { FilterType } from '@/types/common/filterType.types';
+import { formatDate, formatDisplayDate } from '@/utils/helpers/dateUtils';
 
 interface TaskSectionProps {
   selectedDate: Date;

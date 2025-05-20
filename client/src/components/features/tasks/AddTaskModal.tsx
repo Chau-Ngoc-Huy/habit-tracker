@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { formatDate } from '../utils/dateUtils';
-import { Task } from '../types';
+import { formatDate } from '@/utils/helpers/dateUtils';
+import { Task } from '@/types/api/responses/task.types';
 
 interface AddTaskModalProps {
   selectedDate: Date;

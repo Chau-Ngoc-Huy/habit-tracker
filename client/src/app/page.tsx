@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { getUsers } from '../lib/apiClient';
-import { User } from '../types';
-import LoginPage from '../components/LoginPage';
-import Dashboard from '../components/Dashboard';
+import { useAuth } from '@/store/providers/AuthProviders';
+import { getUsers } from '@/lib/apiClient';
+import { User } from '@/types/api/responses/user.types';
+import LoginPage from '@/components/features/auth/LoginPage';
+import Dashboard from '@/components/features/dashboard/Dashboard';
 
 export default function Home() {
   const [currentUser, setCurrentUser] = useState<string | null>(null);

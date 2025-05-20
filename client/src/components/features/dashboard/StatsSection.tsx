@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import StreakCard from './StreakCard';
-import ProgressCard from './ProgressCard';
-import Calendar from './Calendar';
-import { User, Task } from '../types';
+import StreakCard from '@/components/features/dashboard/StreakCard';
+import ProgressCard from '@/components/features/dashboard/ProgressCard';
+import Calendar from '@/components/ui/Calendar';
+import { User } from '@/types/api/responses/user.types';
+import { Task } from '@/types/api/responses/task.types';
 
 interface StatsSectionProps {
   user: User;

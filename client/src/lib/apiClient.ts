@@ -1,5 +1,5 @@
 import { API_BASE_URL } from '../config/config';
-import { hashPassword, verifyPassword } from './authUtils';
+import { hashPassword, verifyPassword } from '../utils/auth/authUtils';
 
 // Type definitions
 export type User = {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { User } from '../types';
-import { useAuth, AuthContextType } from '../contexts/AuthContext';
+import { User } from '@/types/api/responses/user.types';
+import { useAuth, AuthContextType } from '@/store/providers/AuthProviders';
 
 interface LoginPageProps {
   users: Record<string, User>;

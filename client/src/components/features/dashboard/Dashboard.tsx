@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import Header from './Header';
-import TaskSection from './TaskSection';
+import Header from '@/components/layout/Header';
+import TaskSection from '@/components/features/tasks/TaskSection';
 import StatsSection from './StatsSection';
-import AddTaskModal from './AddTaskModal';
-import { User, Task } from '../types';
-import { formatDate } from '../utils/dateUtils';
-import Calendar from './Calendar';
-import { createTask, updateTask, deleteTask, getTasksByUserId, updateUser, getUserStreak, deleteFrozenTasks } from '../lib/apiClient';
+import AddTaskModal from '@/components/features/tasks/AddTaskModal';
+import { User } from '@/types/api/responses/user.types';
+import { Task } from '@/types/api/responses/task.types';
+import { formatDate } from '@/utils/helpers/dateUtils';
+import Calendar from '@/components/ui/Calendar';
+import { createTask, updateTask, deleteTask, getTasksByUserId, updateUser, getUserStreak, deleteFrozenTasks } from '@/lib/apiClient';
 
 interface DashboardProps {
   currentUser: string | null;

@@ -1,5 +1,5 @@
-import Providers from '../components/Providers';
-import './globals.css';
+import Providers from '@/store/providers/Providers';
+import '@/styles/globals.css';
 
 export const metadata = {
   title: 'Habit Tracker',

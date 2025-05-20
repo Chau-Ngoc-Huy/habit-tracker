@@ -1,6 +1,6 @@
 import React from 'react';
-import { User } from '../types';
-import UserSelector from './UserSelector';
+import { User } from '@/types/api/responses/user.types';
+import UserSelector from '@/components/features/auth/UserSelector';
 
 interface HeaderProps {
   user: User;

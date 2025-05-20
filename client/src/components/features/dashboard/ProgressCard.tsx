@@ -1,6 +1,7 @@
 import React from 'react';
-import { User, Task } from '../types';
-import { formatDate } from '../utils/dateUtils';
+import { User } from '@/types/api/responses/user.types';
+import { Task } from '@/types/api/responses/task.types';
+import { formatDate } from '@/utils/helpers/dateUtils';
 
 interface ProgressCardProps {
   user: User;

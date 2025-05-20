@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { User as AppUser, getUserById, createUser, verifyUserCredentials } from '../lib/apiClient';
+import { User as AppUser, getUserById, createUser, verifyUserCredentials } from '@/lib/apiClient';
 
 // Simplified Session type since we're not using Supabase
 type Session = {
