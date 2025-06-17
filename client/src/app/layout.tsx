@@ -5,8 +5,7 @@ export const metadata = {
   title: 'Habit Tracker',
   description: 'Track your habits and goals',
   icons: {
-    icon: '/favicon.ico',
-    apple: '/apple-icon.png',
+    icon: '/icons8-habit-64.png'
   },
 };
 
