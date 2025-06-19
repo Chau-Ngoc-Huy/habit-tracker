@@ -1,11 +1,9 @@
 import React from 'react';
 import StreakCard from '@/components/features/dashboard/StreakCard';
 import Calendar from '@/components/ui/Calendar';
-import { User } from '@/types/api/responses/user.types';
 import { Task } from '@/types/api/responses/task.types';
 
 interface StatsSectionProps {
-  user: User;
   streak: number;
   tasks: Task[];
   selectedDate: Date;
@@ -13,7 +11,6 @@ interface StatsSectionProps {
 }
 
 const StatsSection: React.FC<StatsSectionProps> = ({
-  user,
   streak,
   tasks,
   selectedDate,

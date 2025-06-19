@@ -2,11 +2,10 @@ import React from 'react';
 import { User } from '@/types/api/responses/user.types';
 
 interface StreakCardProps {
-  user: User;
   streak: number;
 }
 
-const StreakCard: React.FC<StreakCardProps> = ({ user, streak }) => {
+const StreakCard: React.FC<StreakCardProps> = ({ streak }) => {
   
   // Calculate progress percentage (max 30 days)
   const progressPercent = Math.min(streak / 30 * 100, 100);
