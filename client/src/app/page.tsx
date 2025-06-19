@@ -36,14 +36,14 @@ export default function Home() {
     };
 
     fetchUsers();
-  }, [currentUser]);
+  }, []);
 
   // If a user is logged in via auth system, use that instead
-  useEffect(() => {
-    if (auth?.user) {
-      setCurrentUser(auth.user.id);
-    }
-  }, [auth?.user]);
+  // useEffect(() => {
+  //   if (auth?.user) {
+  //     setCurrentUser(auth.user.id);
+  //   }
+  // }, [auth?.user]);
 
   const handleLogout = async () => {
     if (auth) {

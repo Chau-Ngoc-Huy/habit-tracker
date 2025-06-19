@@ -8,7 +8,6 @@ import { formatDate, formatDisplayDate } from '@/utils/helpers/dateUtils';
 interface TaskSectionProps {
   selectedDate: Date;
   setSelectedDate: (date: Date) => void;
-  user: User;
   tasks: Task[];
   onToggleTask: (taskId: number | string, dateString: string) => void;
   onDeleteTask: (taskId: number | string, dateString: string) => void;
@@ -21,7 +20,6 @@ interface TaskSectionProps {
 const TaskSection: React.FC<TaskSectionProps> = ({
   selectedDate,
   setSelectedDate,
-  user,
   tasks,
   onToggleTask,
   onDeleteTask,

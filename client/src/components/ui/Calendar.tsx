@@ -1,40 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { User } from '@/types/api/responses/user.types';
+import React, { useState } from 'react';
 import { Task } from '@/types/api/responses/task.types';
 import { formatDate, formatDisplayMonth } from '@/utils/helpers/dateUtils';
-import { getTasksByMonth } from '@/lib/apiClient';
 
 interface CalendarProps {
-  user: User;
+  tasks: Task[];
   selectedDate: Date;
   setSelectedDate: (date: Date) => void;
 }
 
-const Calendar: React.FC<CalendarProps> = ({ user, selectedDate, setSelectedDate }) => {
+const Calendar: React.FC<CalendarProps> = ({tasks, selectedDate, setSelectedDate }) => {
   const [calendarDate, setCalendarDate] = useState(new Date());
-  const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-
-  // Fetch tasks for the current month
-  useEffect(() => {
-    const fetchTasks = async () => {
-      setIsLoading(true);
-      try {
-        const monthTasks = await getTasksByMonth(
-          user.id,
-          calendarDate.getFullYear(),
-          calendarDate.getMonth()
-        );
-        setTasks(monthTasks);
-      } catch (error) {
-        console.error('Error fetching tasks:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchTasks();
-  }, [user.id, calendarDate]);
 
   // Check if a date has tasks
   const hasTasks = (date: Date): boolean => {

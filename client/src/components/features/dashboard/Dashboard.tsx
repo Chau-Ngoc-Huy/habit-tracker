@@ -6,7 +6,6 @@ import AddTaskModal from '@/components/features/tasks/AddTaskModal';
 import { User } from '@/types/api/responses/user.types';
 import { Task } from '@/types/api/responses/task.types';
 import { formatDate } from '@/utils/helpers/dateUtils';
-import Calendar from '@/components/ui/Calendar';
 import { createTask, updateTask, deleteTask, getTasksByUserId, updateUser, getUserStreak, deleteFrozenTasks } from '@/lib/apiClient';
 
 interface DashboardProps {
@@ -28,11 +27,12 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [showAddModal, setShowAddModal] = useState(false);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
-
-  const user = currentUser ? users[currentUser] : null;
+  const [user, setUser] = useState<User | null>(currentUser ? users[currentUser] : null);
+  const [streak, setStreak] = useState<number>(0);
 
   // Fetch tasks and streak when user changes
   useEffect(() => {
+    setUser(currentUser ? users[currentUser] : null);
     if (currentUser) {
       fetchTasksAndStreak();
     }
@@ -50,32 +50,12 @@ const Dashboard: React.FC<DashboardProps> = ({
       const streakData = await getUserStreak(currentUser);
       
       // Update user with new streak
-      if (user) {
-        const updatedUser: User = {
-          ...user,
-          streak: streakData.streak
-        };
-        
-        setUsers(prev => ({
-          ...prev,
-          [currentUser]: updatedUser
-        }));
-      }
+      setStreak(streakData.streak);
     } catch (error) {
       console.error('Error fetching tasks and streak:', error);
       // Set streak to -1 on error and ensure tasks is an empty array
       setTasks([]);
-      if (user) {
-        const updatedUser: User = {
-          ...user,
-          streak: -1
-        };
-        
-        setUsers(prev => ({
-          ...prev,
-          [currentUser]: updatedUser
-        }));
-      }
+      setStreak(-1);
     }
   };
 
@@ -300,7 +280,6 @@ const Dashboard: React.FC<DashboardProps> = ({
             <TaskSection 
               selectedDate={selectedDate}
               setSelectedDate={setSelectedDate}
-              user={user}
               tasks={(tasks || []).filter(task => task.date === formatDate(selectedDate))}
               onToggleTask={toggleTask}
               onDeleteTask={handleDeleteTask}
@@ -313,7 +292,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
           <div className="space-y-8">
             <StatsSection 
-              user={user}
+              streak={streak}
               tasks={tasks || []}
               selectedDate={selectedDate}
               setSelectedDate={setSelectedDate}
