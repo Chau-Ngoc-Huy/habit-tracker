@@ -40,6 +40,8 @@ func main() {
 	// API routes
 	api := r.Group("/api")
 	{
+		// Health check route
+		api.GET("/health", handlers.HealthCheckHandler)
 		// User routes
 		api.GET("/users", handlers.GetUsers)
 		api.GET("/users/:id", handlers.GetUserById)

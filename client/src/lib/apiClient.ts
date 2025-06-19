@@ -140,6 +140,11 @@ export const verifyUserCredentials = async (email: string, password: string): Pr
   return handleResponse<User>(response);
 };
 
+export const healthCheck = async (): Promise<any> => {
+  const response = await fetch(`${API_BASE_URL}/health`);
+  return handleResponse<any>(response);
+};
+
 // Helper function to handle API responses
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {

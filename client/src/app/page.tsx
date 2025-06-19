@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/store/providers/AuthProviders';
 import { getUsers } from '@/lib/apiClient';
+import { healthCheck } from '@/lib/apiClient';
 import { User } from '@/types/api/responses/user.types';
 import LoginPage from '@/components/features/auth/LoginPage';
 import Dashboard from '@/components/features/dashboard/Dashboard';
@@ -36,6 +37,19 @@ export default function Home() {
     };
 
     fetchUsers();
+  }, []);
+
+  // Health check interval
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        const result = await healthCheck();
+        console.log('Health check:', result);
+      } catch (error) {
+        console.error('Health check failed:', error);
+      }
+    }, 30000); // 30 seconds
+    return () => clearInterval(interval);
   }, []);
 
   // If a user is logged in via auth system, use that instead
