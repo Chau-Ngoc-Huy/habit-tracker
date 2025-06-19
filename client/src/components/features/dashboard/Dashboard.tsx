@@ -34,28 +34,31 @@ const Dashboard: React.FC<DashboardProps> = ({
   useEffect(() => {
     setUser(currentUser ? users[currentUser] : null);
     if (currentUser) {
-      fetchTasksAndStreak();
+      fetchTasks();
+      fetchStreak();
     }
   }, [currentUser]);
 
-  const fetchTasksAndStreak = async () => {
+  const fetchStreak = async () => {
     if (!currentUser) return;
-
     try {
-      // Fetch tasks
-      const fetchedTasks = await getTasksByUserId(currentUser);
-      setTasks(fetchedTasks || []); // Ensure we always set an array
-
-      // Fetch streak
       const streakData = await getUserStreak(currentUser);
-      
-      // Update user with new streak
       setStreak(streakData.streak);
     } catch (error) {
       console.error('Error fetching tasks and streak:', error);
-      // Set streak to -1 on error and ensure tasks is an empty array
-      setTasks([]);
       setStreak(-1);
+    }
+  };
+
+  const fetchTasks = async () => {
+    if (!currentUser) return;
+    try {
+      const fetchedTasks = await getTasksByUserId(currentUser);
+      setTasks(fetchedTasks || []);
+
+    } catch (error) {
+      console.error('Error fetching tasks and streak:', error);
+      setTasks([]);
     }
   };
 
@@ -156,7 +159,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         ));
         
         // Fetch updated streak after task update
-        await fetchTasksAndStreak();
+        await fetchStreak();
       }
     } catch (error) {
       console.error('Error toggling task:', error);
@@ -171,7 +174,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       setTasks(tasks.filter(task => task.id !== taskId));
       
       // Fetch updated streak after task deletion
-      await fetchTasksAndStreak();
+      await fetchStreak();
     } catch (error) {
       console.error('Error deleting task:', error);
     }
@@ -216,7 +219,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       }
       
       // Fetch updated streak after task modification
-      await fetchTasksAndStreak();
+      await fetchStreak();
     } catch (error) {
       console.error('Error modifying task:', error);
     }
@@ -237,7 +240,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       setTasks(prevTasks => [...(prevTasks || []), frozenTask]);
       
       // Fetch updated streak after freezing tasks
-      await fetchTasksAndStreak();
+      await fetchStreak();
     } catch (error) {
       console.error('Error freezing tasks:', error);
     }
@@ -258,7 +261,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       );
       
       // Fetch updated streak after unfreezing tasks
-      await fetchTasksAndStreak();
+      await fetchStreak();
     } catch (error) {
       console.error('Error unfreezing tasks:', error);
     }
